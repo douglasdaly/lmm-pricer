@@ -1,0 +1,7 @@
+LIBRARY LMMPricer
+EXPORTS
+	GenerateCUDALMMPaths = GenerateCUDALMMPaths
+	GenerateCPULMMPaths = GenerateCPULMMPaths
+	CalculateCapPrice = CalculateCapPrice
+	ImplyCapletVolatility = ImplyCapletVolatility
+	

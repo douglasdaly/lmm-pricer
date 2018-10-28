@@ -1,0 +1,526 @@
+<html>
+
+<header>
+	<!-- Header Data -->
+	<title>LMM Pricer .:. Getting Started Guide</title>
+		
+</header>
+
+<body>
+	<!-- Content Table -->
+	<a id="top"></a>
+	<table border="0">
+	
+		<!-- Title -->
+		<tr>
+			<td><img src="images/lmmlogo.png" height="200px" width="200px" title="" /></td>
+			<td><p></p></td>
+			<td>
+				<table>
+					<tr>
+						<td><h1>LIBOR Market Model Derivatives Pricer</h1></td>
+					</tr>
+					<tr>
+						<td><h2>Getting Started Guide</h2></td>
+					</tr>
+					<tr>
+						<td><p><b>Author:</b> Douglas James Daly Jr.</p></td>
+					</tr>
+					<tr>
+						<td><p><b>Version:</b> 0.2.1</p></td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td><i>&copy; Copyright 2014.  All rights reserved.</i></td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+	
+	<hr/>
+	
+	<!-- Contents -->
+	<h3><u>Contents:</u></h3>
+		<ol>
+			<li><a href="#About">About</a></li>
+		
+			<li><a href="#Changes">Change Log</a></li>
+		
+			<li><a href="#ReqComponents">System Requirements</a></li>
+		
+			<li><a href="#ExcelSetup">Excel Setup</a></li>
+		
+			<li><a href="#Tabs">Workbook Tabs</a>
+				<ul>
+					<li><a href="#TabsTitle">Title Tab</a></li>
+					<li><a href="#TabsMarket">Market Tab</a></li>
+					<li><a href="#TabsLMM">LMM Tab</a></li>
+					<li><a href="#TabsLMMPlot">LMMPlot Tab</a></li>
+				</ul>
+			</li>
+		
+			<li><a href="#AddResources">Additional Resources</a></li>
+			
+			<li><a href="#Contact">Contact</a></li>
+			
+			<li><a href="#References">References</a></li>
+	
+		</ol>
+		
+	
+	<hr/>
+	
+	<!-- About -->
+	<a id="About"></a>
+	<h3>About</h3>
+	
+	<h4>The Software</h4>
+	
+	<p style="padding-left:10px">I designed and programmed this software as part of two class projects in my senior year of college at Johns Hopkins University where I'll be receiving a B.Sc. in Physics and another B.Sc. in Applied Mathematics & Statistics with a Finance Concentration.  The project was used both for a presentation on the LMM to my Interest Rate and Credit Derivatives class (the Finance basis of the program) and in a presentation to my Practical Scientific Analysis of Big Data class (the CUDA/Performance basis of the program).  The goal was to create an easy-to-use, powerful and fast LIBOR Market Model implementation that could be used to price various derivatives quickly enough to be appropriate for a trading environment.  I accomplished this by utilizing fast C++ functions for any calculation that required even "moderate-lifting", and most importantly by utilizing CUDA code to generate the LMM sample paths in parallel rather then sequentially on the CPU (actually the CPU code is a parallel/sequential-hybrid calculation method and is currently much faster than the GPU code).</p>
+	
+	<h4>How it Works</h4>
+	
+		<h5 style="padding-left:10px">The LIBOR Market Model:</h5>
+		<p style="padding-left:20px">The software uses a <i>basic</i> version of the LIBOR Market Model described in <a href="#ref1">[1]</a> with 1,2 and 5-year tenors (though the LMMPricer.dll code supports any sized tenors).  Caplet spot volatilities are used as the Lambdas (aka Forward Rates Instantaneous Volatilities) directly, since the formula given in <a href="#ref1">[1]</a> for calculating the Lambdas assumes time-homogeneity which isn't always observed in the market.  Attempting to compute the Lambdas in a time-inhomogeneous market results in (nonsensical) negative values.  The caplet volatilities are stripped from the cap volatilities using the method described in <a href="#ref3">[3]</a> and more detail in <a href="#ref2">[2]</a>.  First we calculate cap prices for each 3-month tenor from 1-year until year 30.25.  We get data points for these smaller scales (program takes inputs in 1, 2, and 5-year tenors) by linearly interpolating and extrapolating.  Once we calculate these (at-the-money) cap values, we can subtract off subsequent ones to get caplet values at the various data points.  Finally we get the caplet volatilities by solving the Black-76 formula for a caplet price for the implied volatility using the secant method.</p>
+	
+	<h4>Acknowledgements</h4>
+	
+	<p style="padding-left:10px">I would like to thank Professor David Audley for helping me understand the LMM and answering the (many) questions I had about its implementation. I would also like to thank Professor Tamas Budavari for helping me find some substantial CUDA optimizations and helping me with how best to get the LMM implemented on the GPU.</p>
+	
+	<h4>Copyright Notices</h4>
+	
+	<p style="padding-left:10px">The LMM Pricer software, this and all other included documents, source code and components are copyrights of the author (Douglas James Daly Jr.) unless otherwise stated here.</p>
+	<p style="padding-left:10px">Microsoft Windows and Microsoft Excel are copyrights of Microsoft Corporation.  CUDA is a copyright of NVIDIA Corporation.</p>
+	
+	<h4>AS-IS Software</h4>
+	
+	<p style="padding-left:10px">This software is provided AS-IS without any warranty or guarantee.  The author claims no responsibility for its use or misuse nor any responsibility in the consequences of its use, nor does he guarantee it will work on every system.</p>
+	
+	<h4>License</h4>
+	
+	<p style="padding-left:10px">This software is licensed under the GNU Public License (GPL), see the included LICENSE file for details.</p>
+	
+	<h4>Agreement to Terms</h4>
+	
+	<p style="padding-left:10px">Your use of this software constitutes a binding agreement to the terms set forth here, in the README file and in the LICENSE file.  If you do not agree to these terms then do not use the software.</p>
+	
+	
+	<p><a href="#top">[Return to Top]</a></p>
+	
+	<hr/>
+	
+	<!-- Change Log -->
+	<a id="Changes"></a>
+	<h3>Change Log</h3>
+	
+	<p style="padding-left:10px">The following changes have been made from Version 0.2 to the (current) Version 0.2.1:
+		<ul>
+			<li>Changes volatility input from bps to percentages</li>
+			<li>Updated VBA code to reflect new volatility measure</li>
+			<li>Fixed/changed the way cap prices are calculated in C++ code</li>
+		</ul>
+	</p>
+	
+	
+	<p style="padding-left:10px">The following changes have been made from Version 0.1 to the (current) Version 0.2:
+		<ul>
+			<li>Removed ExcelPython and Python dependence and replaced with appropriate functions in the DLL (for speed).</li>
+			<li>Changed formatting of LMM path display in the LMM tab for easier, more logical looking, LMM Plots.</li>
+			<li>CUDA Optimizations (slowly but surely getting there...)</li>
+		</ul>
+	</p>	
+	
+	<p style="padding-left:10px">The following changes are planned for the next Version of the software:
+		<ul>
+			<li>Finish optimizing CUDA code so that speeds are on-par or faster than the CPU.</li>
+			<li>Add derivatives pricing utilities:
+				<ul>
+					<li>Caps and Floors:
+						<ul>
+							<li>Rachet Caps/Floors</li>
+							<li>Sticky Caps/Floors</li>
+							<li>Rolling Caps/Floors</li>
+							<li>Flexi Caps/Floors</li>
+						</ul>
+					</li>
+					<li>Bermudan Swaptions</li>
+					<li>Mortgage-Backed Securities</li>
+				</ul>
+			</li>
+			<li>Add LMM Path Visualization/Plotting Utilities</li>
+			<li>Check for time-homogeneity in caplet volatilities and compute forward-rate volatilities accordingly.</li>
+		</ul>
+	</p>
+	
+	<p><a href="#top">[Return to Top]</a></p>
+	
+	<hr/>
+	
+	<!-- Required Components -->
+	<a id="ReqComponents"></a>
+	<h3>System Requirements</h3>
+	
+	<p style="padding-left:10px">The following components are required to run the software:
+		<ul>
+			<li>Microsoft Windows Vista/7/8</li>
+			<li>Microsoft Excel 2007 or greater</li>
+		</ul>
+	</p>
+	
+	<p style="padding-left:10px">In order to utilize the GPU computation portions of this software you must have a CUDA-enabled video card and up-to-date drivers.</p>
+	
+	<hr/>
+	
+	<!-- Excel Setup -->
+	<a id="ExcelSetup"></a>
+	<h3>Excel Setup</h3>
+	
+	<h4>Security Settings</h4>
+	
+	<p style="padding-left:10px">In Excel you must allow the workbook to run macros (which Excel will notify you of upon opening - click "Enable Macros").</p>
+	
+	<p><a href="#top">[Return to Top]</a></p>
+	
+	<hr/>
+	
+	<!-- Excel Tabs -->
+	<a id="Tabs"></a>
+	<h3>Workbook Tabs</h3>
+	
+	<p style="padding-left:10px">The Excel Workbook contains multiple tabs.  Knowing how to use them is (obviously) important.  We'll consider them, in order, describing their use and giving step-by-step instructions.</p>
+	
+		<!-- Title Tab -->
+		<a id="TabsTitle"></a>
+		<h4 style="padding-left:10px"><u>Title Tab:</u></h4>
+		
+		<p style="padding-left:20px">This tab is the one open when you open the workbook.  It contains links to this and other useful and important documents as well as general information about the software.</p>
+		<p style="padding-left:10px"><a href="#top">[Return to Top]</a></p>
+	
+		<!-- Market Tab -->
+		<a id="TabsMarket"></a>
+		<h4 style="padding-left:10px"><u>Market Tab:</u></h4>
+		
+		<p style="padding-left:20px">The Market tab is where all interest rate market data is entered for use in generating LMM sample paths.  There are only two rows where you need to change values: </p>
+		
+		<table style="padding-left:25px" border="0">
+			<tr>
+				<td><a href="images/markettab-1.png" target="_blank" border="0" title="Click to see Full-Size Image"><img src="images/markettab-1.png" width="1000px" height="540px" /></a><hr/></td>
+			</tr>
+			<tr>
+				<td style="border-left:1px solid #DDDDDD; margin:0px; padding:0px;">
+					<ul style="list-style:none; text-align:left;">
+						<li><b>(A)</b>: Market Data Rows - only change these (but see (B)).</li>
+						<li><b>(B)</b>: Any cells marked with the background color as seen here are computed by Excel.  Do not alter these cells.</li>
+						<li><b>(C)</b>: When you've entered your data click this button to recalculate the worksheet and update the graph.</li>
+						<li><b>(D)</b>: The colors in these boxes correspond to the curves on the graph below.</li>
+					</ul>
+				</td>
+			</tr>
+		</table>
+		
+		<p style="padding-left:20px">The above figure shows the key features of the Market tab.  Simply enter the current LIBOR swap curve for the specified tenors in Row 3 (in percent) and then enter the current Cap Volatilities (in basis points) in Row 4.  Once you're done click on the "GO" button which will strip the caplet volatilities from the cap volatilities you entered.</p>
+		
+		<p style="padding-left:20px">If you're interested in more detailed caplet volatility data, the calculation for all volatilities and quarterly tenors is done below the chart and can be seen there.</p>
+		
+		<p style="padding-left:10px"><a href="#top">[Return to Top]</a></p>
+		
+		<!-- LMM Tab -->
+		<a id="TabsLMM"></a>
+		<h4 style="padding-left:10px"><u>LMM Tab:</u></h4>
+		
+		<p style="padding-left:20px">The LMM tab contains the parameter entry and the results of running the LIBOR Market Model Monte Carlo simulations.  The steps below outline how to perform simulations.</p>
+		
+		<p style="padding-left:20px">
+			<ol>
+				<li>Enter the number of sample paths to generate in the "Number of Simulation Paths" cell. *</li>
+				<li>Select a Calculation Method (CPU or GPU). **</li>
+				<li>(Optional) Select the number of paths to plot in the LMM Plot tab by entering the value in the cell marked "Number of Paths to Plot".</li>
+				<li>Click on the "Generate" button to start.</li>
+			</ol>
+			
+			<ul style="list-style:none;">
+				<li>*  - Generally 500 is used (though the program is capable of many more).  The more paths the longer the computation will take and the software limits this amount, depending on your system, to avoid freezing your computer or locking-up your graphics card.</li>
+				<li>** - In order to use the GPU to speed-up the computation, you must have a CUDA-enabled video card.  If you select this and you do not have a CUDA enabled video card, an error message will be displayed.</li>
+			</ul>
+		</p>
+		
+		<p style="padding-left:20px">Also note that the more sample paths you want to generate the longer the calculation will take.  Computing on the GPU is much faster than on the CPU (see ** above), but the CPU is very fast.  Depending on your system, you may not even be able to notice the difference between the two methods for small amounts of sample paths (1000 or less).</p>
+		
+		<p style="padding-left:10px"><a href="#top">[Return to Top]</a></p>
+		
+		<!-- LMMPlot Tab -->
+		<a id="TabsLMMPlot"></a>
+		<h4 style="padding-left:10px"><u>LMMPlot Tab:</u></h4>
+		
+		
+		<p style="padding-left:10px"><a href="#top">[Return to Top]</a></p>
+	
+	<!-- Add Info about the Tabs -->
+	<h4>Process for using the Workbook</h4>
+	
+	<p style="padding-left:10px">The general process for using the workbook is as follows:
+		<ol>
+			<li>Enter the current market data in the Market tab.</li>
+			<li>Generate sample paths in the LMM tab.</li>
+			<li>Utilize the pricing tools in the other tabs to perform functions on your newly generated simulation paths.</li>
+		</ol>
+	</p>
+	
+	<p><a href="#top">[Return to Top]</a></p>
+	
+	<hr />
+		
+	
+	<!-- Additional Resources -->
+	<a id="AddResources"></a>
+	<h3>Additional Resources</h3>
+	
+	<p style="padding-left:10px">The following additional resources are included with this software:</p>
+	
+	<table style="padding-left:20px;">
+		<tr>
+			<td colspan="5"><hr/></td>
+		</tr>	
+		<tr>
+			<td align="center"><b><u>Name</u></b></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center"><b><u>Description</u></b></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center" width="135px"><b><u>Link</u></b></td>
+		</tr>
+		<tr>
+			<td colspan="5"><hr/></td>
+		</tr>
+		
+		<tr>
+			<td valign="top">README</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>The Read-Me file which contains lots of important information about the software, it's use, licensing, contact, etc.</i></td>
+			<td>&nbsp;</td>
+			<td valign="top"><a href="../README.txt" target="_blank">Click Here to Open</a></td>
+		</tr>
+		<tr><td colspan="5"></td></tr>
+		<tr>
+			<td valign="top">LICENSE</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>The copy of the GNU Public License (GPL) which outlines the licensing of this software and the restrictions (rather, lack-thereof) it imposes on use, copying, modifying, re-distributing, etc.  It's important if you want to include code into your project(s) or change this project that you understand the terms of this license agreement.</i></td>
+			<td>&nbsp;</td>
+			<td valign="top"><a href="../LICENSE.txt" target="_blank">Click Here to Open</a></td>
+		</tr>
+		
+		<tr>
+			<td colspan="5"><hr/></td>
+		</tr>
+	</table>
+	
+	<p style="padding-left:10px">The following additional resources can be found online:</p>
+	
+	<table style="padding-left:20px">
+		<tr>
+			<td colspan="7"><hr/></td>
+		</tr>	
+		<tr>
+			<td align="center"><b><u>Name</u></b></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center"><b><u>Description</u></b></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center"><b><u>Website</b></u></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center" width="72px"><b><u>Link</u></b></td>
+		</tr>
+		<tr>
+			<td colspan="7"><hr/></td>
+		</tr>
+		
+		<tr>
+			<td valign="top">Google</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>Perhaps the best resource in the world for any questions you may have.</i></td>
+			<td>&nbsp;</td>
+			<td valign="top">Google.com</td>
+			<td>&nbsp;</td>
+			<td valign="top" align="center"><a href="http://www.google.com/" target="_blank">Click Here</a></td>
+		</tr>
+		<tr><td colspan="7"></td></tr>
+		<tr>
+			<td valign="top">Excel Help Forums</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>A useful help/discussion forum for all of your Excel related questions.</i></td>
+			<td>&nbsp;</td>
+			<td valign="top">ExcelForum.com</td>
+			<td>&nbsp;</td>
+			<td valign="top"><a href="http://www.excelforum.com/" target="_blank">Click Here</a></td>
+		</tr>
+		<tr><td colspan="7"></td></tr>
+		<tr>
+			<td valign="top">CUDA Zone</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>The developer zone for NVIDIA's CUDA programming language.  Contains valuable resources and sample code for writing programs that utilize the processing power of CUDA-enabled video cards.</i></td>
+			<td>&nbsp;</td>
+			<td valign="top">Developer.NVIDIA.com</td>
+			<td>&nbsp;</td>
+			<td valign="top"><a href="http://developer.nvidia.com/cuda-zone" target="_blank">Click Here</a></td>
+		</tr>
+		<tr><td colspan="7"></td></tr>
+		<tr>
+			<td valign="top">GNU Licenses</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>The license page of the GNU Project's website.  Contains information on the different licenses offered by GNU and information about each.</i></td>
+			<td>&nbsp;</td>
+			<td valign="top">GNU.org</td>
+			<td>&nbsp;</td>
+			<td valign="top"><a href="http://www.gnu.org/licenses/licenses.html" target="_blank">Click Here</a></td>
+		</tr>
+		<tr><td colspan="7"></td></tr>
+		<tr>
+			<td valign="top">CProgramming Forum</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>The CProgramming board is perhaps the largest programming forum on the internet devoted to C/C++ programming.  Extremely helpful for the tough problems you can't figure out on your own with regards to C/C++ programming.  Just make sure you've spent some time trying to figure out the problem yourself first, and of course, post your source code when asking a question.</i></td>
+			<td>&nbsp;</td>
+			<td valign="top">Cboard.Cprogramming.com</td>
+			<td>&nbsp;</td>
+			<td valign="top"><a href="http://cboard.cprogramming.com/" target="_blank">Click Here</a></td>
+		</tr>
+		
+		<tr>
+			<td colspan="7"><hr/></td>
+		</tr>
+	</table>
+	
+	<!-- Book Resources -->
+	<p style="padding-left:10px">The following additional resources can probably be found at your local university's library or on Amazon.com:</p>
+	
+	<table style="padding-left:20px">
+		<tr>
+			<td colspan="7"><hr/></td>
+		</tr>	
+		<tr>
+			<td align="center" width="20%"><b><u>Title</u></b></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center" width="10%"><b><u>Author</u></b></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center"><b><u>Comments</b></u></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center" width="80px"><b><u>Link</u></b></td>
+		</tr>
+		<tr>
+			<td colspan="7"><hr/></td>
+		</tr>
+		
+		<tr>
+			<td valign="top">Options, Futures and Other Derivatives (8th Ed.)</td>
+			<td>&nbsp;</td>
+			<td valign="top">Hull, John C.</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>Known as the "Derivatives Bible" for good reason - this textbook is incredibly comprehensive and geared towards undergraduate/masters students as a first course in Financial Derivatives.  Very thorough both qualitatively and quantitatively.  It's generally my go-to book for financial derivatives.</i></td>
+			<td>&nbsp;</td>
+			<td valign="top" align="center"><a href="http://www.amazon.com/Options-Futures-Derivatives-DerivaGem-Package/dp/0132777428" target="_blank">Amazon</a></td>
+		</tr>
+		<tr><td colspan="7"></td></tr>
+		
+		<tr>
+			<td valign="top">The LIBOR Market Model in Practice</td>
+			<td>&nbsp;</td>
+			<td valign="top">Gatarek, Bachert & Maksymiuk</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>An excellent (heavily mathematical) work on how to implement, calibrate, etc. the LIBOR market model.  It's worth noting that Gatarek is the "G" in the BGM-Model (aka the LIBOR Market Model).</i></td>
+			<td>&nbsp;</td>
+			<td valign="top" align="center"><a href="http://www.amazon.com/The-LIBOR-Market-Model-Practice/dp/0470014431" target="_blank">Amazon</a></td>
+		</tr>
+		
+		<tr>
+			<td colspan="7"><hr/></td>
+		</tr>
+		
+	</table>
+	
+	<p><a href="#top">[Return to Top]</a></p>
+	
+	<hr />
+	
+	<!-- Contact -->
+	<a id="Contact"></a>
+	<h3>Contact</h3>
+	
+	<p style="padding-left:10px">Notice how this part's at the end?  Before contacting the author with questions/comments/concerns please make sure you've checked this document, the README file, and the FAQs file for an answer to your question.  If the answer to your question isn't in any of those, search through all the other additional resources.  If you still have a question then contact the author as a last resort.</p>
+	<p style="padding-left:10px">Bug reports are welcomed and encouraged - please include as much detail as possible when submitting a bug report.  Also note the System Requirements for the software, if your system doesn't meet these requirements do not submit a bug report.  Bug reports are for bugs that only occur on supported systems.</p>
+	<p style="padding-left:10px">If you'd like to contribute to this project, feel free (that's the great thing about the GPL!), if you'd like your code added to this particular project contact me and we'll see if it's something worth adding (you'll be given complete credit for any portions you add of course).</p>
+	
+	<p style="padding-left:10px">Please direct all inquiries to:</p>
+	<p style="padding-left:20px">Doug Daly<br/>&nbsp;&nbsp;douglas (dot) daly89 (at) gmail (dot) com</p>
+	
+	<p><a href="#top">[Return to Top]</a></p>
+	
+	<hr/>
+	
+	<!-- References -->
+	<a id="References"></a>
+	<h3>References</h3>
+	
+	<p style="padding-left:10px">The following resources/references were used in the development of this software:</p>
+	
+	<table style="padding-left:20px">
+		<tr>
+			<td colspan="7"><hr/></td>
+		</tr>	
+		<tr>
+			<td align="center"><b><u>Number</u></b></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center"><b><u>Title</u></b></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center"><b><u>Author</b></u></td>
+			<td><p>&nbsp;&nbsp;</p></td>
+			<td align="center"><b><u>Comments</u></b></td>
+		</tr>
+		<tr>
+			<td colspan="7"><hr/></td>
+		</tr>
+		
+		<a id="ref1"></a>
+		<tr>
+			<td valign="top" align="center">[1]</td>
+			<td>&nbsp;</td>
+			<td valign="top">Options, Futures and Other Derivatives (8th Ed.)</td>
+			<td>&nbsp;</td>
+			<td valign="top">Hull, John C.</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>Page 720; Equation 31.11<br>Page 721; Equation 31.14</i></td>
+		</tr>
+		<tr><td colspan="7"></td></tr>
+		
+		<a id="ref2"></a>
+		<tr>
+			<td valign="top" align="center">[2]</td>
+			<td>&nbsp;</td>
+			<td valign="top">The LIBOR Market Model in Practice</td>
+			<td>&nbsp;</td>
+			<td valign="top">Gatarek, Bachert & Maksymiuk</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>Pages 74-78; Section 7.3.3 - "Stripping caplet volatilities from cap quotes"<br/>Pages 84-86; Section 7.4.2 - "Piecewise constant instantaneous volatilities depending on the maturity of the underlying forward rate"</i></td>
+		</tr>
+		<tr><td colspan="7"></td></tr>
+		
+		<a id="ref3"></a>
+		<tr>
+			<td valign="top" align="center">[3]</td>
+			<td>&nbsp;</td>
+			<td valign="top">Student Solutions Manual for Options, Futures, and Other Derivatives (8th Ed.)</td>
+			<td>&nbsp;</td>
+			<td valign="top">Hull, John C.</td>
+			<td>&nbsp;</td>
+			<td valign="top"><i>Page 222; Solution to problem 28.20</i></td>
+		</tr>
+		
+		<tr>
+			<td colspan="7"><hr/></td>
+		</tr>
+		
+	</table>
+	
+	<p><a href="#top">[Return to Top]</a></p>
+	
+</body>
+</html>
